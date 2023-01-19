@@ -94,10 +94,11 @@
 
 <script>
 import axios from "axios"
+import {getAuth} from "firebase/auth";
 
 export default {
   name: "PersonDetail",
-  props: ['id'],
+  props: ['detailForPerson', 'a1'],
   emits: ['goBackToPeople'],
   data() {
     return {
@@ -105,12 +106,15 @@ export default {
       edit: null,
       colors: [],
       arrayForRectangles: [1, 2, 3, 4, 5],
-      isClickedInIncOfAttention: false
+      isClickedInIncOfAttention: false,
+      idToken: null
     }
   },
   methods: {
     goBackToPeople() {
       this.$emit('goBackToPeople')
+      localStorage.removeItem('personDetail')
+      localStorage.removeItem('isOpenPersonDetail')
     },
     editField(parameter) {
       this.edit = parameter
@@ -143,34 +147,27 @@ export default {
       }
     },
     saveChanges() {
-      let updatedData = JSON.stringify(this.personDetail);
-      axios.post('https://interview-api-luvkm7etwa-uc.a.run.app/people/' + this.id, updatedData,
-          {
-            headers: {
-              "X-Auth-Token": 'AIzaSyA_EdaXKzEQ_Yg1YnAl8ikzQDooFirlTis',
-              "Content-Type": 'application/json'
-            }
-          }).then((response) => {
-        console.log(response)
-        this.goBackToPeople()
-      })
-          .catch(err => console.log(err.message))
+     let localThis=this;
+      getAuth().currentUser.getIdToken().then(function(idToken){
+        axios.post('https://interview-api-luvkm7etwa-uc.a.run.app/people/' + localThis.personDetail.Id, localThis.personDetail,
+            {
+              headers: {
+                "X-Auth-Token" : idToken ,
+              }
+            }).then((response) => {
+          localThis.goBackToPeople()
+        })
+            .catch(err => console.log(err.message));
+      }).catch(function(error) {
+         console.log(error.message)
+      });
     }
   }
   ,
   mounted() {
-    axios.get('https://interview-api-luvkm7etwa-uc.a.run.app/people/' + this.id, {
-      headers: {
-        "X-Auth-Token": 'AIzaSyA_EdaXKzEQ_Yg1YnAl8ikzQDooFirlTis'
-      }
-    }).then((response) => {
-          this.personDetail = response.data;
-          this.colors.push(this.personDetail.Profit[0].Color)
-          this.personDetail.Attention?.forEach(item => this.colors.push(item.Color))
-        }
-    )
-        .catch(err => alert(err.message)
-        )
+    this.personDetail = localStorage.getItem('personDetail')? JSON.parse(localStorage.getItem('personDetail')) : this.detailForPerson
+    this.colors.push(this.personDetail.Profit[0].Color)
+    this.personDetail.Attention?.forEach(item => this.colors.push(item.Color))
   }
 }
 </script>

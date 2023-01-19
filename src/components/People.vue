@@ -11,7 +11,7 @@
       </div>
     </div>
   </div>
-  <person-detail v-else :id="idForPersonDetail" @goBackToPeople="goBackToPeople"/>
+  <person-detail v-else :detailForPerson="detailForPerson" @goBackToPeople="goBackToPeople"/>
 </template>
 
 <script>
@@ -49,7 +49,9 @@ export default {
     ...mapActions(useLoginStore, ['loginUser']),
     openPersonDetail(id) {
       this.isOpenPersonDetail = !this.isOpenPersonDetail
-      this.idForPersonDetail = id
+      localStorage.setItem('isOpenPersonDetail',this.isOpenPersonDetail)
+      this.detailForPerson = this.people.find(person => person.Id === id)
+      localStorage.setItem('personDetail', JSON.stringify(this.detailForPerson))
     },
     showMorePeople() {
       this.loading();
@@ -88,6 +90,7 @@ export default {
       }
     });
     window.addEventListener('scroll', this.handleScroll)
+    this.isOpenPersonDetail = localStorage.getItem('isOpenPersonDetail')
   },
   unmounted() {
     window.removeEventListener('scroll', this.handleScroll)
